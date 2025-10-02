@@ -1,8 +1,9 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import BotonEliminarProducto from "./BotonEliminarProducto.js";
+import BotonEditarProducto from "./BotonEditarProducto.js";
 
-const TablaProductos = ({ productos }) => {
+const TablaProductos = ({ productos, eliminarProducto, cargarDatos }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Tabla de Productos</Text>
@@ -19,7 +20,13 @@ const TablaProductos = ({ productos }) => {
         {productos.map((item) => (
           <View key={item.id} style={styles.fila}>
             <Text style={styles.celda}>{item.nombre}</Text>
-            <Text style={styles.celda}>${item.precio}</Text>
+            <Text style={styles.celda}>C${item.precio}</Text>
+            
+            {/* Celda de acciones */}
+            <View style={[styles.celdaAcciones]}>
+              <BotonEditarProducto id={item.id} nombreInicial={item.nombre} precioInicial={item.precio} cargarDatos={cargarDatos}  />
+              <BotonEliminarProducto id={item.id} eliminarProducto={eliminarProducto} />
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -33,26 +40,31 @@ const styles = StyleSheet.create({
     padding: 20,
     alignSelf: "stretch"
   },
+
   titulo: { 
     fontSize: 22, 
     fontWeight: "bold", 
     marginBottom: 10 
   },
+
   fila: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#ccc",
     paddingVertical: 6,
-    alignItems: "center"
+    alignItems: "center",
   },
+
   encabezado: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#dcedf3ff",
   },
+
   celda: {
     flex: 1,
     fontSize: 16,
-    textAlign: "center"
+    textAlign: "center",
   },
+
   celdaAcciones: {
     flex: 1,
     flexDirection: "row",
@@ -60,11 +72,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
+  
   textoEncabezado: {
     fontWeight: "bold",
     fontSize: 17,
-    textAlign: "center"
-  }
+    textAlign: "center",
+  },
 });
 
 export default TablaProductos;
