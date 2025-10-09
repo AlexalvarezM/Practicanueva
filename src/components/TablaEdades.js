@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import BotonEditarEdad from "./BotonEditarEdad.js";
-import BotonEliminarEdad from "./BotonEliminacionEdad.js";
+import BotonEliminarEdad from "./BotonEliminarEdad.js";
 
 const TablaEdades = ({ edades, eliminarEdad, cargarDatos }) => {
   return (

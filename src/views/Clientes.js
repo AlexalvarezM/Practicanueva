@@ -5,7 +5,7 @@ import { collection, doc, getDocs, deleteDoc } from "firebase/firestore";
 import FormularioClientes from "../components/FormularioClientes";
 import TablaClientes from "../components/TablaClientes";
 import TituloPromedio from "../components/TituloPromedio";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+
 
 const Clientes = () =>{
 
