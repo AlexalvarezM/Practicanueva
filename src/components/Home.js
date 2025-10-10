@@ -13,7 +13,11 @@ export default function Home({ navigation }) {
        <View style={styles.botones}>
         <Button title="Ir a Promedios" onPress={() => navigation.navigate('promedios')} />
       </View>
+      <View style={styles.botones}>
+        <Button title="Ir a Usuarios" onPress={() => navigation.navigate('Usuarios')} />
+      </View>
     </View>
+    
   );
 }
 

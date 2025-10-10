@@ -5,6 +5,7 @@ import Home from './src/components/Home';
 import Clientes from './src/views/Clientes';
 import Productos from './src/views/Productos';
 import Promedios from './src/views/Promedios';
+import Usuarios from './src/views/Usuarios';
 
 
 const Stack = createNativeStackNavigator();
@@ -17,6 +18,7 @@ export default function App() {
         <Stack.Screen name="Clientes" component={Clientes} />
         <Stack.Screen name="Productos" component={Productos} />
         <Stack.Screen name='promedios' component={Promedios} />
+        <Stack.Screen name='Usuarios' component={Usuarios} />
       </Stack.Navigator>
     </NavigationContainer>
   );
