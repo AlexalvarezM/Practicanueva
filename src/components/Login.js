@@ -8,7 +8,7 @@ import {
   Alert
 } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../database/firebaseConfig';
+import { auth } from '../database/firebaseconfig';
 
 const Login = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState("");
