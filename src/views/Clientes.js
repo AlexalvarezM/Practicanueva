@@ -65,7 +65,7 @@ const Clientes = () =>{
 
   if (!nombreColeccion || typeof nombreColeccion !== 'string') {
     console.error("Error: Se requiere un nombre de colección válido.");
-    return;
+    return { [nombreColeccion]: [] };
   }
 
   try {
@@ -83,13 +83,14 @@ const Clientes = () =>{
     return datosExportados;
   } catch (error) {
     console.error(`Error extrayendo datos de la colección '${nombreColeccion}':`, error);
+    return { [nombreColeccion]: [] };
   }
 };
 
 
 const exportarDatos = async () => {
   try {
-    const datos = await cargarDatosFirebase("productos");
+    const datos = await cargarDatosFirebase("clientes");
     console.log("Datos cargados:", datos);
 
     // Formatea los datos para el archivo y el portapapeles
@@ -129,8 +130,9 @@ const exportarDatos = async () => {
 
 
   useEffect(() =>{
+    // Cargar datos al montar. No ejecutar exportarDatos() automáticamente —
+    // el usuario puede exportar con el botón "Exportar".
     cargarDatos();
-    exportarDatos();
   },[]);
 
   return(

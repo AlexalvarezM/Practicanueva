@@ -23,10 +23,12 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  const cerrarSesion = async (navigation) => {
-    await signOut(auth);
-    setUsuario(null);
-    navigation.replace("Login");
+  const cerrarSesion = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    }
   };
 
   return (

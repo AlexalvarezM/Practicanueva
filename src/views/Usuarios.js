@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Button } from 'react-native';
 import { collection, getDocs, deleteDoc, doc, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../database/firebaseconfig.js';
 import FormularioUsuarios from '../components/FormularioUsuarios.js';
 import ListaUsuarios from '../components/ListaUsuarios.js';
 import TablaUsuarios from '../components/TablaUsuarios.js';
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+import * as Clipboard from "expo-clipboard";
 
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
@@ -27,6 +30,51 @@ const Usuarios = () => {
       setUsuarios(data);
     } catch (error) {
       console.error("Error al obtener documentos:", error);
+    }
+  };
+
+  const cargarDatosFirebase = async (nombreColeccion) => {
+    if (!nombreColeccion || typeof nombreColeccion !== 'string') {
+      console.error("Error: Se requiere un nombre de colección válido.");
+      return { [nombreColeccion]: [] };
+    }
+    try {
+      const datosExportados = {};
+      console.log(`Obteniendo documentos de la colección '${nombreColeccion}'...`);
+      const snapshot = await getDocs(collection(db, nombreColeccion));
+      datosExportados[nombreColeccion] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      return datosExportados;
+    } catch (error) {
+      console.error(`Error extrayendo datos de la colección '${nombreColeccion}':`, error);
+      return { [nombreColeccion]: [] };
+    }
+  };
+
+  const exportarDatos = async () => {
+    try {
+      const collectionName = "Usuarios";
+      const datos = await cargarDatosFirebase(collectionName);
+      console.log("Datos cargados:", datos);
+      if (!datos || !datos[collectionName] || datos[collectionName].length === 0) {
+        console.error("No se obtuvieron datos para exportar o la colección está vacía.");
+        Alert.alert("No hay datos para exportar", `Revisa que la colección '${collectionName}' exista y tenga documentos.`);
+        return;
+      }
+      const jsonString = JSON.stringify(datos, null, 2);
+      const baseFileName = "datos_firebase.txt";
+      await Clipboard.setStringAsync(jsonString);
+      console.log("Datos (JSON) copiados al portapapeles.");
+      if (!(await Sharing.isAvailableAsync())) {
+        Alert.alert("Función no disponible", "La función Compartir/Guardar no está disponible en tu dispositivo");
+        return;
+      }
+      const fileUri = FileSystem.cacheDirectory + baseFileName;
+      await FileSystem.writeAsStringAsync(fileUri, jsonString);
+      await Sharing.shareAsync(fileUri, { mimeType: 'text/plain', dialogTitle: 'Compartir datos de Firebase (JSON)' });
+      Alert.alert("Exportado", "Datos copiados al portapapeles y listos para compartir.");
+    } catch (error) {
+      console.error("Error al exportar y compartir:", error);
+      Alert.alert("Error", "Error al exportar o compartir: " + (error.message || error));
     }
   };
 
@@ -134,7 +182,11 @@ const Usuarios = () => {
         modoEdicion={modoEdicion}
       />
 
-      <ListaUsuarios usuarios={usuarios}/>
+      <View style={{ marginVertical: 10 }}>
+        <Button title="Exportar" onPress={exportarDatos} />
+      </View>
+
+     
       <TablaUsuarios
         usuarios={usuarios}
         editarUsuario={editarUsuario}
