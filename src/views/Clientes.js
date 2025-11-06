@@ -9,6 +9,16 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
 
+// Función auxiliar para convertir ArrayBuffer a base64
+const arrayBufferToBase64 = (buffer) => {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
 
 const Clientes = () =>{
 
@@ -54,7 +64,7 @@ const Clientes = () =>{
       if(data.length > 0){
         calcularPromedioAPI(data);
       }else{
-        setClientes(null)
+        setClientes(null) // Corrección: setPromedio(null) ?
       }
     }catch (error){
       console.error("Error al obtener documentos", error);
@@ -128,6 +138,63 @@ const exportarDatos = async () => {
   }
 };
 
+  // --- NUEVA FUNCIÓN PARA GENERAR EXCEL ---
+  const generarExcel = async () => {
+    try {
+      // 1. Obtener solo datos de "clientes"
+      console.log("Cargando clientes para Excel...");
+      const snapshot = await getDocs(collection(db, "clientes"));
+      const clientesParaExcel = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      if (clientesParaExcel.length === 0) {
+        throw new Error("No hay datos en la colección 'clientes'.");
+      }
+      console.log("Clientes para Excel:", clientesParaExcel);
+
+      // 2. Llamar a tu API Gateway (¡Usando tu URL!)
+      const response = await fetch("https://m93lnwukg4.execute-api.us-east-2.amazonaws.com/generarexcel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ datos: clientesParaExcel }), // Envía los datos de clientes
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      // 3. Obtención de ArrayBuffer y conversión a base64
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = arrayBufferToBase64(arrayBuffer);
+
+      // 4. Ruta para guardar el archivo temporalmente
+      const fileUri = FileSystem.documentDirectory + "reporte_clientes.xlsx";
+
+      // 5. Escribir el archivo Excel en el sistema de archivos
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // 6. Compartir el archivo generado
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          dialogTitle: 'Descargar Reporte de Clientes',
+        });
+      } else {
+        alert("Compartir no disponible.");
+      }
+
+      alert("Excel de clientes generado y listo para descargar.");
+
+    } catch (error) {
+      console.error("Error generando Excel:", error);
+      alert("Error: " + error.message);
+    }
+  };
+  // --- FIN DE LA NUEVA FUNCIÓN ---
 
   useEffect(() =>{
     // Cargar datos al montar. No ejecutar exportarDatos() automáticamente —
@@ -140,8 +207,14 @@ const exportarDatos = async () => {
       <FormularioClientes cargarDatos={cargarDatos}/>
       
       <View style={{ marginVertical: 10 }}>
-        <Button title="Exportar" onPress={exportarDatos} />
+        <Button title="Exportar (JSON)" onPress={exportarDatos} />
       </View>
+
+      {/* --- BOTÓN NUEVO (Generar Excel) --- */}
+      <View style={{ marginVertical: 10 }}>
+        <Button title="Generar Excel" onPress={generarExcel} />
+      </View>
+      {/* ---------------------------------- */}
 
       <TablaClientes
       clientes={clientes}

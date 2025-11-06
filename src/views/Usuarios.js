@@ -9,6 +9,17 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as Clipboard from "expo-clipboard";
 
+// Función auxiliar para convertir ArrayBuffer a base64
+const arrayBufferToBase64 = (buffer) => {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+};
+
 const Usuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [modoEdicion, setModoEdicion] = useState(false);
@@ -77,6 +88,64 @@ const Usuarios = () => {
       Alert.alert("Error", "Error al exportar o compartir: " + (error.message || error));
     }
   };
+
+  // --- NUEVA FUNCIÓN PARA GENERAR EXCEL ---
+  const generarExcel = async () => {
+    try {
+      // 1. Obtener solo datos de "Usuarios"
+      console.log("Cargando usuarios para Excel...");
+      const snapshot = await getDocs(collection(db, "Usuarios"));
+      const usuariosParaExcel = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      if (usuariosParaExcel.length === 0) {
+        throw new Error("No hay datos en la colección 'Usuarios'.");
+      }
+      console.log("Usuarios para Excel:", usuariosParaExcel);
+
+      // 2. Llamar a tu API Gateway (¡Usando tu URL!)
+      const response = await fetch("https://m93lnwukg4.execute-api.us-east-2.amazonaws.com/generarexcel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ datos: usuariosParaExcel }), // Envía los datos de usuarios
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error HTTP: ${response.status}`);
+      }
+
+      // 3. Obtención de ArrayBuffer y conversión a base64
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = arrayBufferToBase64(arrayBuffer);
+
+      // 4. Ruta para guardar el archivo temporalmente
+      const fileUri = FileSystem.documentDirectory + "reporte_usuarios.xlsx";
+
+      // 5. Escribir el archivo Excel en el sistema de archivos
+      await FileSystem.writeAsStringAsync(fileUri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // 6. Compartir el archivo generado
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          dialogTitle: 'Descargar Reporte de Usuarios',
+        });
+      } else {
+        alert("Compartir no disponible.");
+      }
+
+      alert("Excel de usuarios generado y listo para descargar.");
+
+    } catch (error) {
+      console.error("Error generando Excel:", error);
+      alert("Error: " + error.message);
+    }
+  };
+  // --- FIN DE LA NUEVA FUNCIÓN ---
 
   const eliminarUsuario = async (id) => {
     try{
@@ -183,9 +252,14 @@ const Usuarios = () => {
       />
 
       <View style={{ marginVertical: 10 }}>
-        <Button title="Exportar" onPress={exportarDatos} />
+        <Button title="Exportar (JSON)" onPress={exportarDatos} />
       </View>
 
+      {/* --- BOTÓN NUEVO (Generar Excel) --- */}
+      <View style={{ marginVertical: 10 }}>
+        <Button title="Generar Excel" onPress={generarExcel} />
+      </View>
+      {/* ---------------------------------- */}
      
       <TablaUsuarios
         usuarios={usuarios}
