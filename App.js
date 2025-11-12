@@ -11,6 +11,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from './src/database/firebaseconfig';
 
 
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {

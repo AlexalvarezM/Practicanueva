@@ -15,7 +15,8 @@ const firebaseConfig = {
   authDomain: extra.FIREBASE_AUTH_DOMAIN,
   projectId: extra.FIREBASE_PROJECT_ID,
   messagingSenderId: extra.FIREBASE_MESSAGING_SENDER_ID,
-  appId: extra.FIREBASE_APP_ID
+  appId: extra.FIREBASE_APP_ID,
+  databaseURL: extra.FIREBASE_DATABASE_URL
 };
 
 
