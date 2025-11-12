@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app"
 import { getFirestore } from "firebase/firestore"
 import { initializeAuth, getReactNativePersistence } from "firebase/auth"
+import { getDatabase } from "firebase/database"
 import Constants from "expo-constants"
 import "react-native-get-random-values"
 import "react-native-url-polyfill/auto"
@@ -28,4 +29,7 @@ const auth = initializeAuth(app, {
 
 const db = getFirestore(app);
 
-export { app, auth, db };
+// Inicializar Realtime Database (usando databaseURL si está presente)
+const realtimeDB = getDatabase(app, firebaseConfig.databaseURL);
+
+export { app, auth, db, realtimeDB };
